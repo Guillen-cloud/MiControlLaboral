@@ -1,51 +1,151 @@
 # Mi Control Laboral
 
-Proyecto Android nativo en Java para el control offline de jornadas, pagos e informes.
+Aplicación Android nativa para registrar jornadas laborales, controlar cobros y consultar saldos de Santillana y del trabajo en el campo.
 
-## Estado
+## Estado del proyecto
 
-Aplicación funcional inicial en Java con Room, MVVM, registro de jornadas, pagos,
-informes, respaldo local, autenticación Firebase y respaldo remoto versionado mediante WorkManager.
+**Versión:** desarrollo inicial
+**Lenguaje:** Java
+**Persistencia principal:** Room sobre SQLite
+**Sincronización:** Firebase + WorkManager, en desarrollo
+**Plan Firebase:** Spark
+**Zona horaria:** `America/La_Paz`
+**Android mínimo:** API 26
 
-Room se aísla por usuario mediante una base local `mi_control_laboral_<uid>.db`.
-Las escrituras locales generan registros `PENDING`; WorkManager los intenta enviar
-cuando existe conectividad y los marca `SYNCED` o `FAILED` según el resultado.
+### Funcionalidades disponibles
 
-La descarga bidireccional y la resolución de conflictos todavía están pendientes.
+- Empleos Santillana y Campo.
+- Tarifas configurables y valores históricos en centavos.
+- Jornadas completas, medias y personalizadas.
+- Prevención de duplicados por empleo y fecha.
+- Edición e historial de jornadas.
+- Pagos parciales y agrupados.
+- Asignaciones explícitas a jornadas.
+- Totales generado, cobrado y pendiente.
+- Informes semanales, mensuales y personalizados.
+- Subtotales separados por empleo.
+- Exportación y restauración local en JSON.
+- Registro e inicio de sesión con Firebase Authentication.
+- Respaldo remoto versionado mediante WorkManager.
 
-## Abrir y validar
+## Arquitectura
 
-1. Configurar `local.properties` con la ruta local del Android SDK.
-2. Colocar `google-services.json` dentro de `app/`.
-3. Usar JDK 21 y ejecutar `./gradlew test` desde Git Bash.
-4. Instalar Android SDK Platform 36 y Build Tools compatibles.
-5. Ejecutar `./gradlew assembleDebug` para generar el APK.
-6. Probar `app-debug.apk` en un emulador o dispositivo con Android 8.0 (API 26) o superior.
+```text
+presentation -> ViewModel -> Repository -> Room
+									  \-> WorkManager -> Firestore
+```
 
-No se incluyen datos de demostración. Room sigue siendo la fuente principal local.
+Room es la fuente principal de datos. La aplicación debe seguir funcionando sin conexión para registrar y consultar información local.
+
+## Tecnologías
+
+- Android nativo.
+- Java y XML.
+- MVVM.
+- Repository Pattern.
+- Room / SQLite.
+- LiveData.
+- WorkManager.
+- Firebase Authentication.
+- Cloud Firestore.
+- JUnit.
+
+## Estructura principal
+
+```text
+app/src/main/java/com/micontrollaboral/
+├── database/       Entidades, DAOs, migraciones y base Room
+├── domain/         Modelos de informes y reglas de dominio
+├── presentation/   Activities, ViewModels y flujo de interfaz
+├── repository/     Acceso y operaciones de datos
+├── sync/           Worker y programación de sincronización
+└── utils/          Utilidades monetarias
+```
+
+## Configuración local
+
+Requisitos:
+
+- JDK 21.
+- Android SDK Platform 36.
+- Android Build Tools compatibles.
+- Git Bash o una terminal equivalente.
+
+Configura `local.properties` con la ruta del SDK. Este archivo no se versiona.
+
+Coloca el archivo descargado desde Firebase en:
+
+```text
+app/google-services.json
+```
+
+## Compilar y probar
+
+En Git Bash:
+
+```bash
+export JAVA_HOME="/c/Program Files/Android/Android Studio/jbr"
+export PATH="$JAVA_HOME/bin:$PATH"
+./gradlew test --no-daemon --console=plain
+./gradlew assembleDebug --no-daemon
+```
+
+El APK de depuración se genera en:
+
+```text
+app/build/outputs/apk/debug/app-debug.apk
+```
 
 ## Firebase
 
-El proyecto Firebase debe permanecer en el plan Spark. Authentication usa correo y contraseña.
-Firestore usa rutas privadas bajo `users/{uid}`. Las reglas locales están en `firestore.rules`.
+El proyecto Firebase **ya fue creado** y la aplicación Android ya está registrada.
+Cloud Firestore también **ya fue creado** con la base `(default)`.
 
-El archivo `local.properties` no se versiona. `google-services.json` es la configuración cliente
-de Firebase y no contiene credenciales administrativas.
+No necesitas crear colecciones manualmente. La aplicación las generará al sincronizar datos autenticados.
+
+Configuración necesaria en Firebase Console:
+
+1. Authentication con proveedor correo electrónico/contraseña.
+2. Cloud Firestore en modo producción.
+3. Reglas publicadas desde `firestore.rules`.
+4. Plan Spark sin activar facturación.
+
+Las reglas deben restringir los datos al usuario autenticado bajo `users/{uid}/...`.
 
 ## Sincronización actual
 
-El Worker guarda una copia remota versionada bajo:
+Cada usuario utiliza una base local Room independiente:
+
+```text
+mi_control_laboral_<uid>.db
+```
+
+Las modificaciones locales generan estados `PENDING`. WorkManager intenta subirlas cuando hay conectividad y las marca como `SYNCED` o `FAILED`.
+
+Los respaldos remotos versionados se almacenan bajo:
 
 ```text
 users/{uid}/backups/{timestamp}/
 ```
 
-Si Firebase falla, los datos de Room permanecen intactos y WorkManager reintenta
-con backoff exponencial. La sincronización remota todavía es de subida; no se
-descargan cambios ni se resuelven conflictos automáticamente.
+Room no se elimina ni se sobrescribe si Firebase falla. La descarga bidireccional y la resolución visual de conflictos siguen pendientes.
 
-## Estado de validación
+## Roadmap
 
-Los diagnósticos del editor no muestran errores en el código actual. La ejecución
-de `./gradlew test` debe confirmarse en un entorno donde la terminal devuelva el
-resultado final de Gradle. La prueba en un dispositivo físico o emulador aún está pendiente.
+- [x] Núcleo local Room y MVVM.
+- [x] Jornadas, pagos e informes.
+- [x] Respaldo local JSON.
+- [x] Authentication Firebase.
+- [x] Estados locales de sincronización.
+- [ ] Descargar cambios desde Firestore.
+- [ ] Resolver conflictos sin sobrescritura.
+- [ ] Pruebas en dispositivo físico o emulador.
+- [ ] Validación final de Gradle y generación del APK.
+
+## Seguridad y privacidad
+
+- No se incluyen credenciales administrativas.
+- `local.properties` está excluido del repositorio.
+- Los datos remotos se organizan por `uid`.
+- Room conserva los datos locales ante errores de red.
+- No se requieren permisos de ubicación.
