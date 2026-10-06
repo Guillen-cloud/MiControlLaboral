@@ -1,0 +1,1 @@
+# Reglas de ProGuard se añadirán cuando exista lógica de producción que lo requiera.

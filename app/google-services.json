@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "614213720200",
+    "project_id": "mi-control-laboral",
+    "storage_bucket": "mi-control-laboral.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:614213720200:android:a5904bdcd8b4fc3143273d",
+        "android_client_info": {
+          "package_name": "com.micontrollaboral"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDXOoQKgSlPyxrZCykAoBmaAahW8NqQ_vg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

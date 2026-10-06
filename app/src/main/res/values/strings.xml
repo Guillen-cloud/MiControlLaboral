@@ -1,0 +1,60 @@
+<resources>
+    <string name="app_name">Mi Control Laboral</string>
+    <string name="auth_email_hint">Correo electrónico</string>
+    <string name="auth_password_hint">Contraseña (mínimo 6 caracteres)</string>
+    <string name="auth_login">Iniciar sesión</string>
+    <string name="auth_register">Crear cuenta</string>
+    <string name="auth_invalid_credentials">Introduce un correo válido y una contraseña de al menos 6 caracteres.</string>
+    <string name="auth_failed">No se pudo completar la autenticación.</string>
+    <string name="phase_one_status">Proyecto base preparado</string>
+    <string name="generated_amount_default">Generado: Bs 0.00</string>
+    <string name="generated_amount">Generado: Bs %1$.2f</string>
+    <string name="paid_amount_default">Cobrado: Bs 0.00</string>
+    <string name="paid_amount">Cobrado: Bs %1$.2f</string>
+    <string name="pending_amount_default">Pendiente: Bs 0.00</string>
+    <string name="pending_amount">Pendiente: Bs %1$.2f</string>
+    <string name="employment_summary">%1$s - Bs %2$d jornada completa</string>
+    <string name="register_work_session">Registrar jornada</string>
+    <string name="employments_loading">Cargando empleos...</string>
+    <string name="confirm">Confirmar</string>
+    <string name="worked_date_hint">Fecha (AAAA-MM-DD)</string>
+    <string name="full_session">Jornada completa</string>
+    <string name="half_session">Media jornada</string>
+    <string name="custom_session">Importe personalizado</string>
+    <string name="custom_amount_hint">Importe en Bs</string>
+    <string name="note_hint">Nota opcional</string>
+    <string name="work_session_saved">Jornada guardada</string>
+    <string name="invalid_work_session">Revisa la fecha y el importe.</string>
+    <string name="work_history">Historial de jornadas</string>
+    <string name="work_session_summary">%1$s - %2$s - %3$s - Bs %4$.2f</string>
+    <string name="unknown_employment">Empleo no disponible</string>
+    <string name="edit_work_session">Editar jornada</string>
+    <string name="work_session_updated">Jornada actualizada</string>
+    <string name="register_payment">Registrar cobro</string>
+    <string name="register_grouped_payment">Cobro agrupado</string>
+    <string name="grouped_payment_instruction">Escribe el importe asignado en cada jornada. Deja vacías las que no cubra el cobro.</string>
+    <string name="allocation_amount_hint">Bs asignados</string>
+    <string name="payment_date_hint">Fecha de cobro (AAAA-MM-DD)</string>
+    <string name="payment_amount_hint">Importe cobrado en Bs</string>
+    <string name="payment_session_summary">%1$s - %2$s - generado Bs %3$.2f</string>
+    <string name="no_work_sessions_for_payment">Registra una jornada antes de registrar un cobro.</string>
+    <string name="payment_saved">Cobro guardado</string>
+    <string name="invalid_payment">Revisa la fecha y el importe del cobro.</string>
+    <string name="reports_title">Informes</string>
+    <string name="generate_report">Generar informe</string>
+    <string name="report_start_hint">Desde (AAAA-MM-DD)</string>
+    <string name="report_end_hint">Hasta (AAAA-MM-DD)</string>
+    <string name="report_result_title">Resumen del informe</string>
+    <string name="report_result">Período: %1$s a %2$s\n\nGenerado por jornadas: Bs %3$.2f\nCobrado por jornadas del período: Bs %4$.2f\nEfectivo recibido en el período: Bs %5$.2f\nPendiente: Bs %6$.2f</string>
+    <string name="report_by_employment_title">Subtotales por empleo</string>
+    <string name="report_by_employment_row">%1$s: generado Bs %2$.2f, cobrado Bs %3$.2f, pendiente Bs %4$.2f</string>
+    <string name="export_backup">Exportar respaldo</string>
+    <string name="import_backup">Restaurar respaldo</string>
+    <string name="restore_backup_title">Confirmar restauración</string>
+    <string name="restore_backup_warning">La restauración reemplazará los datos locales actuales. Asegúrate de tener un respaldo reciente.</string>
+    <string-array name="report_periods">
+        <item>Rango personalizado</item>
+        <item>Semana actual (lunes a domingo)</item>
+        <item>Mes actual</item>
+    </string-array>
+</resources>
