@@ -7,7 +7,11 @@ Proyecto Android nativo en Java para el control offline de jornadas, pagos e inf
 Aplicación funcional inicial en Java con Room, MVVM, registro de jornadas, pagos,
 informes, respaldo local, autenticación Firebase y respaldo remoto versionado mediante WorkManager.
 
-La sincronización bidireccional con resolución de conflictos todavía está pendiente.
+Room se aísla por usuario mediante una base local `mi_control_laboral_<uid>.db`.
+Las escrituras locales generan registros `PENDING`; WorkManager los intenta enviar
+cuando existe conectividad y los marca `SYNCED` o `FAILED` según el resultado.
+
+La descarga bidireccional y la resolución de conflictos todavía están pendientes.
 
 ## Abrir y validar
 
@@ -27,3 +31,21 @@ Firestore usa rutas privadas bajo `users/{uid}`. Las reglas locales están en `f
 
 El archivo `local.properties` no se versiona. `google-services.json` es la configuración cliente
 de Firebase y no contiene credenciales administrativas.
+
+## Sincronización actual
+
+El Worker guarda una copia remota versionada bajo:
+
+```text
+users/{uid}/backups/{timestamp}/
+```
+
+Si Firebase falla, los datos de Room permanecen intactos y WorkManager reintenta
+con backoff exponencial. La sincronización remota todavía es de subida; no se
+descargan cambios ni se resuelven conflictos automáticamente.
+
+## Estado de validación
+
+Los diagnósticos del editor no muestran errores en el código actual. La ejecución
+de `./gradlew test` debe confirmarse en un entorno donde la terminal devuelva el
+resultado final de Gradle. La prueba en un dispositivo físico o emulador aún está pendiente.

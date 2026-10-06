@@ -6,6 +6,8 @@ import androidx.lifecycle.LiveData;
 
 import com.micontrollaboral.database.WorkSessionDao;
 import com.micontrollaboral.database.WorkSessionEntity;
+import com.micontrollaboral.database.SyncRecordDao;
+import com.micontrollaboral.database.SyncRecordEntity;
 
 import java.util.UUID;
 import java.util.List;
@@ -20,11 +22,13 @@ public class WorkSessionRepository {
     }
 
     private final WorkSessionDao workSessionDao;
+    private final SyncRecordDao syncRecordDao;
     private final ExecutorService databaseExecutor = Executors.newSingleThreadExecutor();
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
 
-    public WorkSessionRepository(WorkSessionDao workSessionDao) {
+    public WorkSessionRepository(WorkSessionDao workSessionDao, SyncRecordDao syncRecordDao) {
         this.workSessionDao = workSessionDao;
+        this.syncRecordDao = syncRecordDao;
     }
 
     public LiveData<List<WorkSessionEntity>> observeActiveWorkSessions() {
@@ -59,6 +63,7 @@ public class WorkSessionRepository {
             workSession.createdAt = now;
             workSession.updatedAt = now;
             workSessionDao.insert(workSession);
+            markPending(workSession.id, "CREATE");
             mainHandler.post(callback::onSuccess);
         });
     }
@@ -77,7 +82,19 @@ public class WorkSessionRepository {
             }
             workSession.updatedAt = System.currentTimeMillis();
             workSessionDao.update(workSession);
+            markPending(workSession.id, "UPDATE");
             mainHandler.post(callback::onSuccess);
         });
+    }
+
+    private void markPending(String entityId, String operation) {
+        SyncRecordEntity record = new SyncRecordEntity();
+        record.id = "workSession:" + entityId;
+        record.entityType = "workSession";
+        record.entityId = entityId;
+        record.operation = operation;
+        record.state = "PENDING";
+        record.updatedAt = System.currentTimeMillis();
+        syncRecordDao.insertOrReplace(record);
     }
 }

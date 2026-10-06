@@ -2,6 +2,11 @@ package com.micontrollaboral.database;
 
 import android.content.Context;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
+
 import androidx.room.Database;
 import androidx.room.Room;
 import androidx.room.RoomDatabase;
@@ -24,19 +29,47 @@ public abstract class AppDatabase extends RoomDatabase {
 
     public abstract SyncRecordDao syncRecordDao();
 
-    public static AppDatabase getInstance(Context context) {
+    public static AppDatabase getInstance(Context context, String ownerUid) {
+        if (ownerUid == null || ownerUid.trim().isEmpty()) {
+            throw new IllegalArgumentException("Se requiere un uid autenticado para abrir la base local.");
+        }
         if (instance == null) {
             synchronized (AppDatabase.class) {
                 if (instance == null) {
+                    String safeUid = ownerUid.replaceAll("[^A-Za-z0-9_-]", "_");
+                    String databaseName = "mi_control_laboral_" + safeUid + ".db";
+                    migrateLegacyDatabaseIfNeeded(context, databaseName);
                     instance = Room.databaseBuilder(
                             context.getApplicationContext(),
                             AppDatabase.class,
-                            "mi_control_laboral.db"
+                            databaseName
                     ).addMigrations(MIGRATION_1_2, MIGRATION_2_3).build();
                 }
             }
         }
         return instance;
+    }
+
+    private static void migrateLegacyDatabaseIfNeeded(Context context, String databaseName) {
+        File legacy = context.getDatabasePath("mi_control_laboral.db");
+        File target = context.getDatabasePath(databaseName);
+        if (!legacy.exists() || target.exists()) {
+            return;
+        }
+        try {
+            Files.copy(legacy.toPath(), target.toPath(), StandardCopyOption.COPY_ATTRIBUTES);
+            File legacyWal = new File(legacy.getPath() + "-wal");
+            File targetWal = new File(target.getPath() + "-wal");
+            if (legacyWal.exists()) Files.copy(legacyWal.toPath(), targetWal.toPath(), StandardCopyOption.COPY_ATTRIBUTES);
+            File legacyShm = new File(legacy.getPath() + "-shm");
+            File targetShm = new File(target.getPath() + "-shm");
+            if (legacyShm.exists()) Files.copy(legacyShm.toPath(), targetShm.toPath(), StandardCopyOption.COPY_ATTRIBUTES);
+            legacy.delete();
+            legacyWal.delete();
+            legacyShm.delete();
+        } catch (IOException exception) {
+            throw new IllegalStateException("No se pudo migrar la base local existente.", exception);
+        }
     }
 
     private static final androidx.room.migration.Migration MIGRATION_1_2 = new androidx.room.migration.Migration(1, 2) {

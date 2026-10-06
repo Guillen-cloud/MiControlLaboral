@@ -19,6 +19,7 @@ import androidx.lifecycle.ViewModelProvider;
 
 import com.micontrollaboral.R;
 import com.micontrollaboral.MiControlLaboralApplication;
+import com.google.firebase.auth.FirebaseAuth;
 import com.micontrollaboral.database.AppDatabase;
 import com.micontrollaboral.database.EmploymentEntity;
 import com.micontrollaboral.database.WorkSessionEntity;
@@ -66,12 +67,17 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        AppDatabase database = ((MiControlLaboralApplication) getApplication()).getDatabase();
+        if (FirebaseAuth.getInstance().getCurrentUser() == null) {
+            finish();
+            return;
+        }
+        String ownerUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        AppDatabase database = ((MiControlLaboralApplication) getApplication()).getDatabase(ownerUid);
         backupRepository = new BackupRepository(database, getContentResolver());
         viewModel = new ViewModelProvider(this, new MainViewModelFactory(
-                new EmploymentRepository(database.employmentDao()),
-                new WorkSessionRepository(database.workSessionDao()),
-                new PaymentRepository(database),
+                new EmploymentRepository(database.employmentDao(), database.syncRecordDao()),
+                new WorkSessionRepository(database.workSessionDao(), database.syncRecordDao()),
+                new PaymentRepository(database, database.syncRecordDao()),
                 new ReportRepository(database)
         )).get(MainViewModel.class);
 

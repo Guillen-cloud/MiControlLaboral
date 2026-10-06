@@ -10,6 +10,8 @@ import com.micontrollaboral.database.PaymentAllocationEntity;
 import com.micontrollaboral.database.PaymentEntity;
 import com.micontrollaboral.database.WorkSessionDao;
 import com.micontrollaboral.database.WorkSessionEntity;
+import com.micontrollaboral.database.SyncRecordDao;
+import com.micontrollaboral.database.SyncRecordEntity;
 
 import java.util.UUID;
 import java.util.HashSet;
@@ -38,12 +40,14 @@ public class PaymentRepository {
 
     private final AppDatabase database;
     private final WorkSessionDao workSessionDao;
+    private final SyncRecordDao syncRecordDao;
     private final ExecutorService databaseExecutor = Executors.newSingleThreadExecutor();
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
 
-    public PaymentRepository(AppDatabase database) {
+    public PaymentRepository(AppDatabase database, SyncRecordDao syncRecordDao) {
         this.database = database;
         workSessionDao = database.workSessionDao();
+        this.syncRecordDao = syncRecordDao;
     }
 
     public LiveData<Integer> observeAllocatedAmountCents() {
@@ -87,6 +91,8 @@ public class PaymentRepository {
             database.runInTransaction(() -> {
                 database.paymentDao().insert(payment);
                 database.paymentAllocationDao().insert(allocation);
+                markPending(payment.id, "payment", "CREATE");
+                markPending(allocation.id, "paymentAllocation", "CREATE");
             });
             mainHandler.post(callback::onSuccess);
         });
@@ -150,7 +156,9 @@ public class PaymentRepository {
                 database.paymentDao().insert(payment);
                 for (PaymentAllocationEntity allocation : allocations) {
                     database.paymentAllocationDao().insert(allocation);
+                    markPending(allocation.id, "paymentAllocation", "CREATE");
                 }
+                markPending(payment.id, "payment", "CREATE");
             });
             mainHandler.post(callback::onSuccess);
         });
@@ -158,5 +166,16 @@ public class PaymentRepository {
 
     private void postError(SaveCallback callback, String message) {
         mainHandler.post(() -> callback.onError(message));
+    }
+
+    private void markPending(String entityId, String entityType, String operation) {
+        SyncRecordEntity record = new SyncRecordEntity();
+        record.id = entityType + ":" + entityId;
+        record.entityType = entityType;
+        record.entityId = entityId;
+        record.operation = operation;
+        record.state = "PENDING";
+        record.updatedAt = System.currentTimeMillis();
+        syncRecordDao.insertOrReplace(record);
     }
 }

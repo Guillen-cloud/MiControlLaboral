@@ -18,8 +18,10 @@ import com.micontrollaboral.database.EmploymentEntity;
 import com.micontrollaboral.database.PaymentAllocationEntity;
 import com.micontrollaboral.database.PaymentEntity;
 import com.micontrollaboral.database.WorkSessionEntity;
+import com.micontrollaboral.database.SyncRecordEntity;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class SyncWorker extends Worker {
@@ -36,7 +38,11 @@ public class SyncWorker extends Worker {
         }
 
         try {
-            AppDatabase database = ((MiControlLaboralApplication) getApplicationContext()).getDatabase();
+            AppDatabase database = ((MiControlLaboralApplication) getApplicationContext()).getDatabase(user.getUid());
+            List<SyncRecordEntity> pendingRecords = database.syncRecordDao().getPending();
+            if (pendingRecords.isEmpty()) {
+                return Result.success();
+            }
             String backupId = String.valueOf(System.currentTimeMillis());
             String root = "users/" + user.getUid() + "/backups/" + backupId;
             FirebaseFirestore firestore = FirebaseFirestore.getInstance();
@@ -54,8 +60,22 @@ public class SyncWorker extends Worker {
                 batch.set(firestore.document(root + "/paymentAllocations/" + value.id), allocationMap(value), SetOptions.merge());
             }
             Tasks.await(batch.commit());
+            long syncedAt = System.currentTimeMillis();
+            database.runInTransaction(() -> {
+                for (SyncRecordEntity record : pendingRecords) {
+                    database.syncRecordDao().updateState(record.id, "SYNCED", 0, null, syncedAt);
+                }
+            });
             return Result.success();
         } catch (Exception exception) {
+            try {
+                AppDatabase database = ((MiControlLaboralApplication) getApplicationContext()).getDatabase(user.getUid());
+                long failedAt = System.currentTimeMillis();
+                for (SyncRecordEntity record : database.syncRecordDao().getPending()) {
+                    database.syncRecordDao().updateState(record.id, "FAILED", 1, exception.getMessage(), failedAt);
+                }
+            } catch (Exception ignored) {
+            }
             return Result.retry();
         }
     }
